@@ -22,10 +22,29 @@ def main():
     gs = ChessEngine.GameState()
     loadImages()
     running = True
+    sqSelected = ()  # no squares selected
+    playerClicks = []  # players clicks tracking
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
                 running = False
+            elif e.type == p.MOUSEBUTTONDOWN:
+                location = p.mouse.get_pos()
+                col = location[0] // SQ_SIZE
+                row = location[1] // SQ_SIZE
+                if sqSelected == (row, col):
+                    sqSelected = ()  # Un-select
+                    playerClicks = []  # Reset player clicks
+                else:
+                    sqSelected = (row, col)
+                    playerClicks.append(sqSelected)
+                if len(playerClicks) == 2:  # Move piece after second click
+                    move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
+                    print(move.getChessNotations())
+                    gs.makeMove(move)
+                    sqSelected = ()
+                    playerClicks = []
+
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
         p.display.flip()
@@ -37,11 +56,11 @@ def drawGameState(screen, gs):
 
 
 def drawBoard(screen):
-    colors = [p.Color("white"), p.Color("red")]
+    colors = [p.Color("white"), p.Color("lightcoral")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
-            color = colors[((r+c) % 2)]
-            p.draw.rect(screen, color, p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            color = colors[((r + c) % 2)]
+            p.draw.rect(screen, color, p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 def drawPieces(screen, board):
@@ -49,7 +68,7 @@ def drawPieces(screen, board):
         for c in range(DIMENSION):
             piece = board[r][c]
             if piece != "--":
-                screen.blit(IMAGES[piece], p.Rect(c*SQ_SIZE, r*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+                screen.blit(IMAGES[piece], p.Rect(c * SQ_SIZE, r * SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 
 if __name__ == "__main__":
