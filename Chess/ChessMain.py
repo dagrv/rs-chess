@@ -7,6 +7,7 @@ SQ_SIZE = HEIGHT // DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
+p.display.set_caption('rust-chess')
 
 def loadImages():
     pieces = ['wp', 'wR', 'wN', 'wB', 'wK', 'wQ', "bp", "bR", "bN", "bB", "bK", "bQ"]
@@ -20,10 +21,13 @@ def main():
     clock = p.time.Clock()
     screen.fill(p.Color("white"))
     gs = ChessEngine.GameState()
+    validMoves = gs.getValidMoves()
+    moveMade = False
     loadImages()
     running = True
     sqSelected = ()  # no squares selected
     playerClicks = []  # players clicks tracking
+
     while running:
         for e in p.event.get():
             if e.type == p.QUIT:
@@ -32,21 +36,33 @@ def main():
                 location = p.mouse.get_pos()
                 col = location[0] // SQ_SIZE
                 row = location[1] // SQ_SIZE
+
                 if sqSelected == (row, col):
                     sqSelected = ()  # Un-select
                     playerClicks = []  # Reset player clicks
                 else:
                     sqSelected = (row, col)
                     playerClicks.append(sqSelected)
+
                 if len(playerClicks) == 2:  # Move piece after second click
                     move = ChessEngine.Move(playerClicks[0], playerClicks[1], gs.board)
                     print(move.getChessNotations())
-                    gs.makeMove(move)
-                    sqSelected = ()
-                    playerClicks = []
+
+                    if move in validMoves:
+                        gs.makeMove(move)
+                        moveMade = True
+                        sqSelected = ()
+                        playerClicks = []
+                    else:
+                        playerClicks = [sqSelected]
             elif e.type == p.KEYDOWN:
                 if e.key == p.K_z:
                     gs.undoMove()
+                    moveMade = True
+
+        if moveMade:
+            validMoves = gs.getValidMoves()
+            moveMade = False
 
         drawGameState(screen, gs)
         clock.tick(MAX_FPS)
@@ -59,7 +75,7 @@ def drawGameState(screen, gs):
 
 
 def drawBoard(screen):
-    colors = [p.Color("white"), p.Color("lightcoral")]
+    colors = [p.Color("white"), p.Color("darksalmon")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r + c) % 2)]
