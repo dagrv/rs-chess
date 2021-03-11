@@ -1,5 +1,5 @@
 import pygame as p
-from Chess import ChessEngine
+from Chess import ChessEngine, SmartMoveFinder
 
 WIDTH = HEIGHT = 512
 DIMENSION = 8
@@ -30,10 +30,13 @@ def main():
     sqSelected = ()  # no squares selected
     playerClicks = []  # players clicks tracking
     gameOver = False
+    playerOne = True #False to enable AI vs AI
+    playerTwo = False
 
     while running:
+        humanTurn = (gs.whiteToMove and playerOne) or (not gs.whiteToMove and playerTwo)
         for e in p.event.get():
-            if not gameOver:
+            if not gameOver and humanTurn:
                 if e.type == p.QUIT:
                     running = False
                 elif e.type == p.MOUSEBUTTONDOWN:
@@ -72,6 +75,14 @@ def main():
                     playerClicks = []
                     moveMade = False
                     animate = False
+
+        # -- A.I --
+        if not gameOver and not humanTurn:
+            AIMove = SmartMoveFinder.findRandomMove(validMoves)
+            gs.makeMove(AIMove)
+            moveMade = True
+            animate = True
+
 
         if moveMade:
             if animate:
@@ -119,7 +130,7 @@ def drawGameState(screen, gs, validMoves, sqSelected):
 
 def drawBoard(screen):
     global colors
-    colors = [p.Color("white"), p.Color("darksalmon")]
+    colors = [p.Color("white"), p.Color("moccasin")]
     for r in range(DIMENSION):
         for c in range(DIMENSION):
             color = colors[((r + c) % 2)]
